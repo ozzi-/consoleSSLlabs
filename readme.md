@@ -13,3 +13,10 @@ The url file must use the following format:
 
 Example:
 www.github.com;www.arstechnica.com;nvd.nist.gov;
+
+
+# Screenshots
+![screenshot](https://i.imgur.com/rY59XIC.png)
+![screenshot](https://i.imgur.com/qRe3AQz.png)
+
+
