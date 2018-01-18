@@ -83,12 +83,10 @@ for i in "${!array[@]}"
 do
     printf ". "
     ret=$(curl -sS "$api${array[i]}")
-    sleep 0.2
 done
 
 echo " "
 echo "Waiting until scans are performed"
-sleep 1
 
 
 while true; do
@@ -104,7 +102,6 @@ while true; do
           array[i]="" #unsetting is for beginners ;)
         fi
       fi
-      sleep 2
   done
 
   notfinished=0
