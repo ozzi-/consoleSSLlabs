@@ -77,35 +77,17 @@ resultfilename="results_`date "+%Y-%m-%d_%H:%M:%S"`.html"
 echo "<html>" > $resultfilename
 echo "<h1>Qualys SSL Labs Checker </h1><h2>`date "+%Y-%m-%d %H:%M:%S"`</h2>" >> $resultfilename
 
-while true; do
-  for i in "${!array[@]}"
-  do
-      if [ ${#array[i]} -gt 1 ];
-      then
-        res=$(getResult "grade" "gradeTrustIgnored")
-        if [ ${#res} -gt 2 ];
-        then
-          echo ""
-          echo "$((i+1)) / $urlcount - $res"
-          array[i]="" #unsetting is for beginners ;)
-        fi
-      fi
-  done
-
-  notfinished=0
-  for i in "${!array[@]}"
-  do
-      if [ ${#array[i]} -gt 1 ];
-      then
-        notfinished=1
-      fi
-  done
-  if [ $notfinished -ne 1 ];
+for i in "${!array[@]}"
+do
+  res=$(getResult "grade" "gradeTrustIgnored")
+  if [ ${#res} -gt 2 ];
   then
-    end=`date +%s`
-    runtime=$((end-start))
-    echo "<br><br><i>Script executed in $runtime seconds</i>" >> $resultfilename
-    echo "</html>" >> $resultfilename
-    exit
+    echo ""
+    echo "$((i+1)) / $urlcount - $res"
+    array[i]="" #unsetting is for beginners ;)
   fi
 done
+end=`date +%s`
+runtime=$((end-start))
+echo "<br><br><i>Script executed in $runtime seconds</i>" >> $resultfilename
+echo "</html>" >> $resultfilename
