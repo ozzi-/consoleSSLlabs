@@ -77,17 +77,6 @@ resultfilename="results_`date "+%Y-%m-%d_%H:%M:%S"`.html"
 echo "<html>" > $resultfilename
 echo "<h1>Qualys SSL Labs Checker </h1><h2>`date "+%Y-%m-%d %H:%M:%S"`</h2>" >> $resultfilename
 
-echo "Starting scan for $urlcount URLs"
-for i in "${!array[@]}"
-do
-    printf ". "
-    ret=$(curl -sS "$api${array[i]}")
-done
-
-echo " "
-echo "Waiting until scans are performed"
-
-
 while true; do
   for i in "${!array[@]}"
   do
