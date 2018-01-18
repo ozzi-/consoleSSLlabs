@@ -71,7 +71,6 @@ fi
 set -f
 array=(${urlfile//;/ })
 urlcount=${#array[@]}
-urlcount=$(($urlcount-1))
 
 start=`date +%s`
 resultfilename="results_`date "+%Y-%m-%d_%H:%M:%S"`.html"
