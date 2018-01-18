@@ -56,9 +56,9 @@ getResult() {
 }
 
 
-if [ -z ${1+x} ]; then
-echo "Add URL file as commandline argument. Exiting.."
-exit
+if [ -z $1 ]; then
+  echo "Add URL file as commandline argument. Exiting.."
+  exit
 fi
 
 urlfile=$(head -n 1 $1)
