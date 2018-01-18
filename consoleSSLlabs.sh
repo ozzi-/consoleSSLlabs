@@ -82,7 +82,6 @@ do
   res=$(getResult "grade" "gradeTrustIgnored")
   echo ""
   echo "$((i+1)) / $urlcount - $res"
-  array[i]="" #unsetting is for beginners ;)
 done
 end=`date +%s`
 runtime=$((end-start))
