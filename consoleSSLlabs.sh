@@ -80,12 +80,9 @@ echo "<h1>Qualys SSL Labs Checker </h1><h2>`date "+%Y-%m-%d %H:%M:%S"`</h2>" >> 
 for i in "${!array[@]}"
 do
   res=$(getResult "grade" "gradeTrustIgnored")
-  if [ ${#res} -gt 2 ];
-  then
-    echo ""
-    echo "$((i+1)) / $urlcount - $res"
-    array[i]="" #unsetting is for beginners ;)
-  fi
+  echo ""
+  echo "$((i+1)) / $urlcount - $res"
+  array[i]="" #unsetting is for beginners ;)
 done
 end=`date +%s`
 runtime=$((end-start))
