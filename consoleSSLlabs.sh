@@ -11,7 +11,16 @@ strindex() {
 }
 
 getResult() {
-  ret=$(curl -sS "$api${array[i]}")
+  while true; do
+    ret=$(curl -sS "$api${array[i]}&fromCache=on")
+    if [[ $ret =~ "\"status\": \"READY" || $ret =~ "\"status\": \"ERROR" ]]
+    then
+      break
+    else
+      sleep 5
+    fi
+  done
+
   ready=$(strindex "$ret" "\"statusMessage\": \"Ready")
   error=$(strindex "$ret" "\"status\": \"ERROR")
   certinvalid=$(strindex "$ret" "Certificate not valid for domain name")
@@ -24,9 +33,9 @@ getResult() {
     echo "<br><span style=\"color:#FF0000\">URL is using an invalid certificate or no https connection can be established.</span><br><a href=\"https://ssllabs.com/ssltest/analyze.html?d=${array[i]}&hideResults=on&latest\">SSLLabs.com</a>" >> $resultfilename
   fi
 
-  if [  $ready -eq "-1" ]
+  if [[ $ready == "-1" ]]
   then
-    if [  $error -ne "-1" ];
+    if [[ $error != "-1" ]]
     then
       echo "Error with URL ${array[i]} ----> Check manually $api${array[i]}"
       pos=$(strindex "$ret" "\"statusMessage\"")
@@ -56,9 +65,9 @@ getResult() {
 }
 
 
-if [ -z ${1+x} ]; then
-echo "Add URL file as commandline argument. Exiting.."
-exit
+if [ -z $1 ]; then
+  echo "Add URL file as commandline argument. Exiting.."
+  exit
 fi
 
 urlfile=$(head -n 1 $1)
@@ -71,56 +80,19 @@ fi
 set -f
 array=(${urlfile//;/ })
 urlcount=${#array[@]}
-urlcount=$(($urlcount-1))
 
 start=`date +%s`
 resultfilename="results_`date "+%Y-%m-%d_%H:%M:%S"`.html"
 echo "<html>" > $resultfilename
 echo "<h1>Qualys SSL Labs Checker </h1><h2>`date "+%Y-%m-%d %H:%M:%S"`</h2>" >> $resultfilename
 
-echo "Starting scan for $urlcount URLs"
 for i in "${!array[@]}"
 do
-    printf ". "
-    ret=$(curl -sS "$api${array[i]}")
-    sleep 0.2
+  res=$(getResult "grade" "gradeTrustIgnored")
+  echo ""
+  echo "$((i+1)) / $urlcount - $res"
 done
-
-echo " "
-echo "Waiting until scans are performed"
-sleep 1
-
-
-while true; do
-  for i in "${!array[@]}"
-  do
-      if [ ${#array[i]} -gt 1 ];
-      then
-        res=$(getResult "grade" "gradeTrustIgnored")
-        if [ ${#res} -gt 2 ];
-        then
-          echo ""
-          echo "$((i+1)) / $urlcount - $res"
-          array[i]="" #unsetting is for beginners ;)
-        fi
-      fi
-      sleep 2
-  done
-
-  notfinished=0
-  for i in "${!array[@]}"
-  do
-      if [ ${#array[i]} -gt 1 ];
-      then
-        notfinished=1
-      fi
-  done
-  if [ $notfinished -ne 1 ];
-  then
-    end=`date +%s`
-    runtime=$((end-start))
-    echo "<br><br><i>Script executed in $runtime seconds</i>" >> $resultfilename
-    echo "</html>" >> $resultfilename
-    exit
-  fi
-done
+end=`date +%s`
+runtime=$((end-start))
+echo "<br><br><i>Script executed in $runtime seconds</i>" >> $resultfilename
+echo "</html>" >> $resultfilename
