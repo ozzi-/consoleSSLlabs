@@ -11,7 +11,16 @@ strindex() {
 }
 
 getResult() {
-  ret=$(curl -sS "$api${array[i]}")
+  while true; do
+    ret=$(curl -sS "$api${array[i]}&fromCache=on")
+    if [[ $ret =~ "\"status\": \"READY" || $ret =~ "\"status\": \"ERROR" ]]
+    then
+      break
+    else
+      sleep 5
+    fi
+  done
+
   ready=$(strindex "$ret" "\"statusMessage\": \"Ready")
   error=$(strindex "$ret" "\"status\": \"ERROR")
   certinvalid=$(strindex "$ret" "Certificate not valid for domain name")
@@ -24,9 +33,9 @@ getResult() {
     echo "<br><span style=\"color:#FF0000\">URL is using an invalid certificate or no https connection can be established.</span><br><a href=\"https://ssllabs.com/ssltest/analyze.html?d=${array[i]}&hideResults=on&latest\">SSLLabs.com</a>" >> $resultfilename
   fi
 
-  if [  $ready -eq "-1" ]
+  if [[ $ready == "-1" ]]
   then
-    if [  $error -ne "-1" ];
+    if [[ $error != "-1" ]]
     then
       echo "Error with URL ${array[i]} ----> Check manually $api${array[i]}"
       pos=$(strindex "$ret" "\"statusMessage\"")
