@@ -56,9 +56,9 @@ getResult() {
 }
 
 
-if [ -z ${1+x} ]; then
-echo "Add URL file as commandline argument. Exiting.."
-exit
+if [ -z $1 ]; then
+  echo "Add URL file as commandline argument. Exiting.."
+  exit
 fi
 
 urlfile=$(head -n 1 $1)
@@ -71,7 +71,6 @@ fi
 set -f
 array=(${urlfile//;/ })
 urlcount=${#array[@]}
-urlcount=$(($urlcount-1))
 
 start=`date +%s`
 resultfilename="results_`date "+%Y-%m-%d_%H:%M:%S"`.html"
