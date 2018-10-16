@@ -72,10 +72,10 @@ set -f
 array=(${urlfile//;/ })
 urlcount=${#array[@]}
 
-start=`date +%s`
-resultfilename="results_`date "+%Y-%m-%d_%H:%M:%S"`.html"
+start=$(date +%s)
+resultfilename="results_$(date "+%Y-%m-%d_%H:%M:%S").html"
 echo "<html>" > $resultfilename
-echo "<h1>Qualys SSL Labs Checker </h1><h2>`date "+%Y-%m-%d %H:%M:%S"`</h2>" >> $resultfilename
+echo "<h1>Qualys SSL Labs Checker </h1><h2>$(date "+%Y-%m-%d %H:%M:%S")</h2>" >> $resultfilename
 
 echo "Starting scan for $urlcount URLs"
 for i in "${!array[@]}"
@@ -116,7 +116,7 @@ while true; do
   done
   if [ $notfinished -ne 1 ];
   then
-    end=`date +%s`
+    end=$(date +%s)
     runtime=$((end-start))
     echo "<br><br><i>Script executed in $runtime seconds</i>" >> $resultfilename
     echo "</html>" >> $resultfilename
