@@ -16,17 +16,17 @@ getResult() {
   error=$(strindex "$ret" "\"status\": \"ERROR")
   certinvalid=$(strindex "$ret" "Certificate not valid for domain name")
 
-  if [  $certinvalid -ne "-1" ]
+  if [  "$certinvalid" -ne "-1" ]
   then
     echo "Scan result of ${array[i]}"
     echo "URL is using an invalid certificate or no https connection can be established."
-    echo "<br><br>Scan result of ${array[i]}" >> $resultfilename
-    echo "<br><span style=\"color:#FF0000\">URL is using an invalid certificate or no https connection can be established.</span><br><a href=\"https://ssllabs.com/ssltest/analyze.html?d=${array[i]}&hideResults=on&latest\">SSLLabs.com</a>" >> $resultfilename
+    echo "<br><br>Scan result of ${array[i]}" >> "$resultfilename"
+    echo "<br><span style=\"color:#FF0000\">URL is using an invalid certificate or no https connection can be established.</span><br><a href=\"https://ssllabs.com/ssltest/analyze.html?d=${array[i]}&hideResults=on&latest\">SSLLabs.com</a>" >> "$resultfilename"
   fi
 
-  if [  $ready -eq "-1" ]
+  if [  "$ready" -eq "-1" ]
   then
-    if [  $error -ne "-1" ];
+    if [  "$error" -ne "-1" ];
     then
       echo "Error with URL ${array[i]} ----> Check manually $api${array[i]}"
       pos=$(strindex "$ret" "\"statusMessage\"")
@@ -34,7 +34,7 @@ getResult() {
       len=$endpos-$pos
       val=${ret:$pos:$len}
       echo "ERROR = $val"
-      echo "<br><br><span style=\"color:#FF0000\">Error with URL ${array[i]}, $val</span><br><a href=\"https://ssllabs.com/ssltest/analyze.html?d=${array[i]}&hideResults=on&latest\">SSLLabs.com</a>" >> $resultfilename
+      echo "<br><br><span style=\"color:#FF0000\">Error with URL ${array[i]}, $val</span><br><a href=\"https://ssllabs.com/ssltest/analyze.html?d=${array[i]}&hideResults=on&latest\">SSLLabs.com</a>" >> "$resultfilename"
        #     "statusMessage": "In progress",
        #     "status": "ERROR",
     fi
@@ -46,22 +46,22 @@ getResult() {
     val=${ret:$pos:$len}
     echo "$val"
     gradea=$(strindex "$val" "\"grade\": \"A")
-    if [  $gradea -ne "-1" ];
+    if [  "$gradea" -ne "-1" ];
     then
-      echo "<br><br>Scan result of ${array[i]}<br><span style=\"color:#00B000\">$val</span><br><a href=\"https://ssllabs.com/ssltest/analyze.html?d=${array[i]}&hideResults=on&latest\">SSLLabs.com</a>" >> $resultfilename
+      echo "<br><br>Scan result of ${array[i]}<br><span style=\"color:#00B000\">$val</span><br><a href=\"https://ssllabs.com/ssltest/analyze.html?d=${array[i]}&hideResults=on&latest\">SSLLabs.com</a>" >> "$resultfilename"
     else
-      echo "<br><br>Scan result of ${array[i]}<br><span style=\"color:#FF0000\">$val</span><br><a href=\"https://ssllabs.com/ssltest/analyze.html?d=${array[i]}&hideResults=on&latest\">SSLLabs.com</a>" >> $resultfilename
+      echo "<br><br>Scan result of ${array[i]}<br><span style=\"color:#FF0000\">$val</span><br><a href=\"https://ssllabs.com/ssltest/analyze.html?d=${array[i]}&hideResults=on&latest\">SSLLabs.com</a>" >> "$resultfilename"
     fi
   fi
 }
 
 
-if [ -z $1 ]; then
+if [ -z "$1" ]; then
   echo "Add URL file as commandline argument. Exiting.."
   exit
 fi
 
-urlfile=$(head -n 1 $1)
+urlfile=$(head -n 1 "$1")
 if [ ${#urlfile} -lt 2 ]; then
 echo "Cannot read input file! Exiting.."
 exit
@@ -72,10 +72,10 @@ set -f
 array=(${urlfile//;/ })
 urlcount=${#array[@]}
 
-start=`date +%s`
-resultfilename="results_`date "+%Y-%m-%d_%H:%M:%S"`.html"
-echo "<html>" > $resultfilename
-echo "<h1>Qualys SSL Labs Checker </h1><h2>`date "+%Y-%m-%d %H:%M:%S"`</h2>" >> $resultfilename
+start=$(date +%s)
+resultfilename="results_$(date "+%Y-%m-%d_%H:%M:%S").html"
+echo "<html>" > "$resultfilename"
+echo "<h1>Qualys SSL Labs Checker </h1><h2>$(date "+%Y-%m-%d %H:%M:%S")</h2>" >> "$resultfilename"
 
 echo "Starting scan for $urlcount URLs"
 for i in "${!array[@]}"
@@ -116,10 +116,10 @@ while true; do
   done
   if [ $notfinished -ne 1 ];
   then
-    end=`date +%s`
+    end=$(date +%s)
     runtime=$((end-start))
-    echo "<br><br><i>Script executed in $runtime seconds</i>" >> $resultfilename
-    echo "</html>" >> $resultfilename
+    echo "<br><br><i>Script executed in $runtime seconds</i>" >> "$resultfilename"
+    echo "</html>" >> "$resultfilename"
     exit
   fi
 done
