@@ -1,8 +1,7 @@
 #!/bin/bash
 
 api="https://api.ssllabs.com/api/v3/analyze?host="
-resultfilename="ssl_result.html"
-
+resultfilename="results_$(date "+%Y-%m-%d_%H:%M:%S").html"
 
 # Basic Checks
 if [ -z "$BASH" ]; then
@@ -21,7 +20,7 @@ usage() {
   echo '''Usage: consoleSSLlabs.sh [OPTIONS]
   [OPTIONS]:
   -U URLS           Path to file containing the URLs to be scanned, use ; as delimiter (required)
-  -O OUTPUT         Output file (HTML report) (default: ssl_result.html)
+  -O OUTPUT         Output file (HTML report) (default: results_%Y-%m-%d_%H:%M:%S.html)
   -V VERBOSE        Use verbose output'''
 }
 
