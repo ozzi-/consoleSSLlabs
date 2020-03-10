@@ -1,109 +1,153 @@
 #!/bin/bash
-# Call script as such:   ./consoleSSLlabs URLFILE
-# URLFILE has the following syntax: first line containing urls, delimited by semicolon ;
 
-api="https://api.ssllabs.com/api/v2/analyze?host="
+api="https://api.ssllabs.com/api/v3/analyze?host="
+resultfilename="ssl_result.html"
 
-# Get position of substring in string
-strindex() {
-  x="${1%%$2*}"
-  [[ "$x" = "$1" ]] && echo -1 || echo "${#x}"
+
+# Basic Checks
+if [ -z "$BASH" ]; then
+  echo "Please use BASH."
+  exit 3
+fi
+
+curl=$(which curl)
+if [ $? -ne 0 ]; then
+  echo "Please install curl."
+  exit 3
+fi
+
+# Usage Info
+usage() {
+  echo '''Usage: consoleSSLlabs.sh [OPTIONS]
+  [OPTIONS]:
+  -U URLS           Path to file containing the URLs to be scanned, use ; as delimiter (required)
+  -O OUTPUT         Output file (HTML report) (default: ssl_result.html)
+  -V VERBOSE        Use verbose output'''
 }
 
+# Handle Command Line Args
+while getopts "U:O:V" opt; do
+  case $opt in
+    U)
+      urlfile=$OPTARG
+      ;;
+    V)
+      verbose=true
+      ;;
+    O)
+      resultfilename=$OPTARG
+      ;;
+    *)
+      usage
+      exit 6
+      ;;
+  esac
+done
+
+
+echo ''
+echo ' _ _  _  _ _ | _ (~(~| |  _ |_  _'
+echo '(_(_)| |_\(_)|(/__)_)|_|_(_||_)_\  by ozzi-'
+echo ""
+echo "Using $api"
+echo "*********************************"
+echo ""
+
+
+# returns 0 if check successfully
+# returns 1 if check failed
+# returns 2 if check is still in progress
 getResult() {
   ret=$(curl -sS "$api${array[i]}")
-  ready=$(strindex "$ret" "\"statusMessage\": \"Ready")
-  error=$(strindex "$ret" "\"status\": \"ERROR")
-  certinvalid=$(strindex "$ret" "Certificate not valid for domain name")
+  status=$(echo $ret | jq -r '.status')
+  statusMessage=$(echo $ret | jq -r '.statusMessage')
+  grade=$(echo $ret | jq -r ".endpoints[0].grade")
+  progress=$(echo $ret | jq -r ".endpoints[0].progress")
 
-  if [  "$certinvalid" -ne "-1" ]
-  then
-    echo "Scan result of ${array[i]}"
-    echo "URL is using an invalid certificate or no https connection can be established."
-    echo "<br><br>Scan result of ${array[i]}" >> "$resultfilename"
-    echo "<br><span style=\"color:#FF0000\">URL is using an invalid certificate or no https connection can be established.</span><br><a href=\"https://ssllabs.com/ssltest/analyze.html?d=${array[i]}&hideResults=on&latest\">SSLLabs.com</a>" >> "$resultfilename"
+  if [ "$verbose" = true  ] ; then
+    echo "${array[i]} - Status = $status - Progress = $progress"
   fi
 
-  if [  "$ready" -eq "-1" ]
-  then
-    if [  "$error" -ne "-1" ];
-    then
-      echo "Error with URL ${array[i]} ----> Check manually $api${array[i]}"
-      pos=$(strindex "$ret" "\"statusMessage\"")
-      endpos=$(strindex "$ret" "\"startTime\"")
-      len=$endpos-$pos
-      val=${ret:$pos:$len}
-      echo "ERROR = $val"
-      echo "<br><br><span style=\"color:#FF0000\">Error with URL ${array[i]}, $val</span><br><a href=\"https://ssllabs.com/ssltest/analyze.html?d=${array[i]}&hideResults=on&latest\">SSLLabs.com</a>" >> "$resultfilename"
-       #     "statusMessage": "In progress",
-       #     "status": "ERROR",
-    fi
-  else
-    echo "Scan result of ${array[i]}"
-    pos=$(strindex "$ret" "\"$1\"")
-    endpos=$(strindex "$ret" "\"$2\"")
-    len=$endpos-$pos
-    val=${ret:$pos:$len}
-    echo "$val"
-    gradea=$(strindex "$val" "\"grade\": \"A")
-    if [  "$gradea" -ne "-1" ];
-    then
-      echo "<br><br>Scan result of ${array[i]}<br><span style=\"color:#00B000\">$val</span><br><a href=\"https://ssllabs.com/ssltest/analyze.html?d=${array[i]}&hideResults=on&latest\">SSLLabs.com</a>" >> "$resultfilename"
+  if [ "$status" == "ERROR" ]; then
+    echo "* Error scanning ${array[i]}"
+    echo "  \_ ERROR = $statusMessage"
+    echo "  \_ $((i+1)) / $urlcount"
+    echo ""
+    echo "<br><br><span style=\"color:#FF0000\">Error with URL ${array[i]}, $statusMessage</span><br><a href=\"https://ssllabs.com/ssltest/analyze.html?d=${array[i]}&hideResults=on&latest\">Details</a>" >> $resultfilename
+    return 1
+  fi
+
+  if [[ ! $grade == "null" ]]; then
+    fgrade=$(echo $grade | cut -c1)
+    echo "* Scan successful for ${array[i]} - Grade: $grade"
+    echo "  \_ $((i+1)) / $urlcount"
+    echo ""
+    if [[ $fgrade == "A" ]]; then
+      color="#00B000"
+    elif [[ $fgrade == "B" ]]; then
+      color="#999900"
     else
-      echo "<br><br>Scan result of ${array[i]}<br><span style=\"color:#FF0000\">$val</span><br><a href=\"https://ssllabs.com/ssltest/analyze.html?d=${array[i]}&hideResults=on&latest\">SSLLabs.com</a>" >> "$resultfilename"
+      color="#FF0000"
     fi
+    echo "<br><br>Scan result of ${array[i]}<br><span style=\"color:$color\"><b>$grade</b></span><br><a href=\"https://ssllabs.com/ssltest/analyze.html?d=${array[i]}&hideResults=on&latest\">Details</a>" >> $resultfilename
+    return 0
   fi
+
+  return 2
 }
 
-
-if [ -z "$1" ]; then
-  echo "Add URL file as commandline argument. Exiting.."
-  exit
+# Check if we are good to go
+if [ -z $urlfile ]; then
+  echo "Error: URL file is required"
+  usage
+  exit 3
 fi
 
-urlfile=$(head -n 1 "$1")
+urlfile=$(head -n 1 $urlfile)
 if [ ${#urlfile} -lt 2 ]; then
-echo "Cannot read input file! Exiting.."
-exit
+  echo "Cannot read input file!"
+  exit 4
 fi
 
+touch $resultfilename
+if ! [[ -w "$resultfilename" ]]; then
+   echo "Cannot write to result file!"
+   exit 5
+fi
 
+# Lets go
 set -f
 array=(${urlfile//;/ })
 urlcount=${#array[@]}
 
-start=$(date +%s)
-resultfilename="results_$(date "+%Y-%m-%d_%H:%M:%S").html"
-echo "<html>" > "$resultfilename"
-echo "<h1>Qualys SSL Labs Checker </h1><h2>$(date "+%Y-%m-%d %H:%M:%S")</h2>" >> "$resultfilename"
+start=`date +%s`
+echo "<html>" > $resultfilename
+echo "<h1>Qualys SSL Labs Checker </h1><h2>`date "+%Y-%m-%d %H:%M:%S"`</h2>" >> $resultfilename
 
-echo "Starting scan for $urlcount URLs"
+echo -n "Starting scan for $urlcount URLs"
 for i in "${!array[@]}"
 do
     printf ". "
     ret=$(curl -sS "$api${array[i]}")
-    sleep 0.2
 done
 
 echo " "
-echo "Waiting until scans are performed"
-sleep 1
-
+sleep 2
+echo ""
+echo "Polling API to check if scans are done, this will take some time"
+echo ""
 
 while true; do
   for i in "${!array[@]}"
   do
-      if [ ${#array[i]} -gt 1 ];
-      then
-        res=$(getResult "grade" "gradeTrustIgnored")
-        if [ ${#res} -gt 2 ];
-        then
-          echo ""
-          echo "$((i+1)) / $urlcount - $res"
-          array[i]="" #unsetting is for beginners ;)
-        fi
+    if [ ${#array[i]} -gt 1 ]; then
+      getResult
+      res=$?
+      if [ $res -eq 0 ] || [ $res -eq 1 ]; then
+        array[i]="" #unsetting is for beginners ;)
       fi
-      sleep 2
+    fi
+    sleep 1
   done
 
   notfinished=0
@@ -114,12 +158,12 @@ while true; do
         notfinished=1
       fi
   done
-  if [ $notfinished -ne 1 ];
-  then
-    end=$(date +%s)
+
+  if [ $notfinished -ne 1 ]; then
+    end=`date +%s`
     runtime=$((end-start))
-    echo "<br><br><i>Script executed in $runtime seconds</i>" >> "$resultfilename"
-    echo "</html>" >> "$resultfilename"
+    echo "<br><br><i>Script executed in $runtime seconds</i>" >> $resultfilename
+    echo "</html>" >> $resultfilename
     exit
   fi
 done
