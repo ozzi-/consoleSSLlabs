@@ -4,9 +4,14 @@ Next to the console output, a HTML report is generated as "results_`date "+%Y-%m
 
 # Usage
 Run on any Unix system with CURL installed as such:
-```sh
-$  ./consoleSSLlabs urlfile
 ```
+Usage: consoleSSLlabs.sh [OPTIONS]
+  [OPTIONS]:
+  -U URLS           Path to file containing the URLs to be scanned, use ; as delimiter (required)
+  -O OUTPUT         Output file (HTML report) (default: results_%Y-%m-%d_%H:%M:%S.html)
+  -V VERBOSE        Use verbose output
+```
+# URL File
 The url file must use the following format:
 * One line only
 * urls seperated by semicolon ;
