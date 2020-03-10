@@ -1,6 +1,6 @@
 # Qualys SSL Labs Checker
-
-This bash script iterates through the provided url file and uses the Qualys SSL Labs API to check the grade rating of the HTTPS certificate. Next to console output, a HTML report is generated as "results_`date "+%Y-%m-%d_%H:%M:%S"`.html".
+consoleSSLlabs enables you to run multiple Qualys SSL Labs scans in an automated manner.
+Next to the console output, a HTML report is generated as "results_`date "+%Y-%m-%d_%H:%M:%S"`.html".
 
 # Usage
 Run on any Unix system with CURL installed as such:
@@ -15,8 +15,10 @@ Example:
 www.github.com;www.arstechnica.com;nvd.nist.gov;
 
 
-# Screenshots
-![screenshot](https://i.imgur.com/rY59XIC.png)
-![screenshot](https://i.imgur.com/qRe3AQz.png)
+# Example Output
+![screenshot](https://i.imgur.com/SZFkbnp.png)
+
+# HTML Report
+![screenshot](https://i.imgur.com/3K0yfpH.png)
 
 
